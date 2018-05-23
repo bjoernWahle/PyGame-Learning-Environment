@@ -112,7 +112,6 @@ class PLE(object):
         if reward_values:
             self.game.adjustRewards(reward_values)
 
-
         if isinstance(self.game, PyGameWrapper):
             if isinstance(rng, np.random.RandomState):
                 self.rng = rng
@@ -127,7 +126,7 @@ class PLE(object):
             from .games.base.doomwrapper import DoomWrapper
             if isinstance(self.game, DoomWrapper):
                 self.rng = rng
-        
+
         self.game.setRNG(self.rng)
         self.init()
 
@@ -164,7 +163,7 @@ class PLE(object):
         This method should be explicitly called.
         """
         self.game._setup()
-        self.game.init() #this is the games setup/init
+        self.game.init()  # this is the games setup/init
 
     def getActionSet(self):
         """
@@ -181,16 +180,16 @@ class PLE(object):
         """
         actions = self.game.actions
 
-        if (sys.version_info > (3, 0)): #python ver. 3
+        if (sys.version_info > (3, 0)):  # python ver. 3
             if isinstance(actions, dict) or isinstance(actions, dict_values):
                 actions = actions.values()
         else:
             if isinstance(actions, dict):
                 actions = actions.values()
 
-        actions = list(actions) #.values()
-        #print (actions)
-        #assert isinstance(actions, list), "actions is not a list"
+        actions = list(actions)  # .values()
+        # print (actions)
+        # assert isinstance(actions, list), "actions is not a list"
 
         if self.add_noop_action:
             actions.append(self.NOOP)
@@ -290,7 +289,7 @@ class PLE(object):
         """
         frame = self.getScreenRGB()
         frame = 0.21 * frame[:, :, 0] + 0.72 * \
-            frame[:, :, 1] + 0.07 * frame[:, :, 2]
+                frame[:, :, 1] + 0.07 * frame[:, :, 2]
         frame = np.round(frame).astype(np.uint8)
 
         return frame
@@ -361,7 +360,7 @@ class PLE(object):
         Parameters
         ----------
 
-        action : int
+        action : list
             The index of the action we wish to perform. The index usually corresponds to the index item returned by getActionSet().
 
         Returns
@@ -380,17 +379,25 @@ class PLE(object):
 
         self.game._draw_frame(self.display_screen)
 
-    def _oneStepAct(self, action):
+    def _oneStepAct(self, actions):
         """
         Performs an action on the game. Checks if the game is over or if the provided action is valid based on the allowed action set.
         """
         if self.game_over():
             return 0.0
 
-        if action not in self.getActionSet():
-            action = self.NOOP
+        if type(actions) == list:
+            for action in actions:
+                if action not in self.getActionSet():
+                    action = self.NOOP
 
-        self._setAction(action)
+                self._setAction(action)
+        else:
+            action = actions
+            if action not in self.getActionSet():
+                action = self.NOOP
+
+            self._setAction(action)
         for i in range(self.num_steps):
             time_elapsed = self._tick()
             self.game.step(time_elapsed)
